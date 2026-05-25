@@ -1,0 +1,18 @@
+{
+  "name": "lazyweb-aeo-audit-skill",
+  "version": "0.1.0",
+  "description": "Lazyweb:AEO_audit Codex skill and CLI for auditing website answer-engine optimization readiness.",
+  "type": "module",
+  "bin": {
+    "lazyweb-aeo-audit": "./bin/lazyweb-aeo-audit.mjs"
+  },
+  "scripts": {
+    "audit": "node ./bin/lazyweb-aeo-audit.mjs",
+    "test": "node --test test/*.test.mjs",
+    "test:live": "node ./scripts/run-live-smoke.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}
