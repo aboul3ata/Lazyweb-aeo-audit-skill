@@ -1,8 +1,5 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { auditSite, renderMarkdownReport } from "../lib/audit.mjs";
 import { isDirectRun, parseCliArgs } from "../bin/lazyweb-aeo-audit.mjs";
@@ -141,6 +138,23 @@ test("fetches auxiliary surfaces from the redirected homepage origin", async () 
   assert.equal(llms.url, "https://www.example.com/llms.txt");
 });
 
+test("fetches auxiliary surfaces from a declared canonical host", async () => {
+  const homepage = {
+    status: 200,
+    headers: { "content-type": "text/html" },
+    body: `<!doctype html><html><head><title>Canonical Host</title><meta name="description" content="Canonical host"><link rel="canonical" href="https://www.example.com/"></head><body><main><h1>Canonical Host</h1><p>${"Product software for agents and developers. ".repeat(80)}</p></main></body></html>`
+  };
+  const result = await auditSite("https://example.com", { fetcher: async (url) => {
+    if (url === "https://example.com/") return response(url, 200, homepage.body, homepage.headers);
+    if (url === "https://www.example.com/llms.txt") return response(url, 200, "Canonical product overview use cases pricing api docs mcp agents support ".repeat(3), { "content-type": "text/plain" });
+    return response(url, 404, "not found", { "content-type": "text/plain" });
+  } });
+
+  const llms = result.evidence.surfaces.find((surface) => surface.key === "llms");
+  assert.equal(llms.present, true);
+  assert.equal(llms.url, "https://www.example.com/llms.txt");
+});
+
 test("parses CLI options without treating option values as URLs", () => {
   assert.deepEqual(parseCliArgs(["--out", "reports", "https://example.com", "--json"]), {
     url: "https://example.com",
@@ -155,17 +169,12 @@ test("parses CLI options without treating option values as URLs", () => {
   assert.throws(() => parseCliArgs(["--out", "reports"]), /Missing URL/);
 });
 
-test("CLI direct-run guard handles npm bin symlinks", async () => {
-  const dir = await mkdtemp(join(tmpdir(), "lazyweb-aeo-cli-"));
-  try {
-    const realPath = join(dir, "lazyweb-aeo-audit.mjs");
-    const symlinkPath = join(dir, "lazyweb-aeo-audit");
-    await writeFile(realPath, "", "utf8");
-    await symlink(realPath, symlinkPath);
-    assert.equal(isDirectRun(symlinkPath, pathToFileURL(realPath).href), true);
-  } finally {
-    await rm(dir, { recursive: true, force: true });
-  }
+test("CLI direct-run guard handles npm bin symlinks", () => {
+  const realPath = "/repo/bin/lazyweb-aeo-audit.mjs";
+  const symlinkPath = "/repo/node_modules/.bin/lazyweb-aeo-audit";
+  const realpath = (value) => value === symlinkPath ? realPath : value;
+
+  assert.equal(isDirectRun(symlinkPath, pathToFileURL(realPath).href, realpath), true);
 });
 
 test("does not award content points when homepage is blocked", async () => {

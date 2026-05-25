@@ -60,4 +60,3 @@ Total score: 100 points.
 ## Evidence Standard
 
 Do not award full credit from inferred intent. Award points only when the page, fetched auxiliary file, response header, schema, or linked document proves the requirement.
-

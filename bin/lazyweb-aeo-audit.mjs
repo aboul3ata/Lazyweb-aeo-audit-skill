@@ -58,10 +58,10 @@ async function main(args) {
   }
 }
 
-export function isDirectRun(argvPath = process.argv[1], moduleUrl = import.meta.url) {
+export function isDirectRun(argvPath = process.argv[1], moduleUrl = import.meta.url, realpath = realpathSync) {
   if (!argvPath) return false;
   try {
-    return realpathSync(argvPath) === realpathSync(fileURLToPath(moduleUrl));
+    return realpath(argvPath) === realpath(fileURLToPath(moduleUrl));
   } catch {
     return argvPath === fileURLToPath(moduleUrl);
   }
