@@ -243,7 +243,8 @@ test("does not award content points when homepage is blocked", async () => {
   assert.equal(result.categories.crawlability.score, 0);
   assert.equal(result.categories.entityTrust.score, 0);
   assert.equal(result.categories.answerability.score, 0);
-  assert.equal(result.categories.integration.score, 0);
+  assert.equal(result.categories.integration.applicable, false);
+  assert.equal(result.categories.integration.score, null);
 });
 
 test("excludes fallback auxiliary bodies from integration docs scoring", async () => {
@@ -262,7 +263,8 @@ test("excludes fallback auxiliary bodies from integration docs scoring", async (
 
   assert.equal(result.evidence.surfaces.find((surface) => surface.key === "openapi").present, false);
   assert.equal(result.evidence.surfaces.find((surface) => surface.key === "wellKnownMcp").present, false);
-  assert.equal(result.categories.integration.score, 0);
+  assert.equal(result.categories.integration.applicable, false);
+  assert.equal(result.categories.integration.score, null);
 });
 
 test("requires real OpenAPI operations", async () => {
@@ -278,6 +280,64 @@ test("requires real OpenAPI operations", async () => {
 
   assert.equal(result.evidence.surfaces.find((surface) => surface.key === "openapi").present, false);
   assert.ok(result.recommendations.some((rec) => rec.title === "Publish OpenAPI or explain no public API"));
+});
+
+test("excludes non-applicable product, API, and agent checks for newsletter sites", async () => {
+  const result = await auditSite("https://newsletter.example", { fetcher: fixtureFetcher({
+    "https://newsletter.example/": html({
+      title: "Founder Notes",
+      description: "A weekly newsletter about building products with AI.",
+      body: `<main><article><h1>Founder Notes</h1>
+        <h2>Weekly essays</h2><p>${"Founder Notes is a weekly newsletter and essay archive for operators building with AI. Subscribe for practical stories, product decisions, customer lessons, and behind-the-scenes notes. ".repeat(20)}</p>
+        <h2>Recent posts</h2><ul><li>Finding early users</li><li>Writing useful updates</li><li>Turning reader questions into essays</li><li>What changed this week?</li><li>How should readers use the archive?</li></ul>
+        <a href="/archive">Archive</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a><a href="/rss.xml">RSS</a>
+        <script type="application/ld+json">${JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "Founder Notes",
+          url: "https://newsletter.example",
+          logo: "https://newsletter.example/logo.png",
+          sameAs: ["https://www.linkedin.com/company/founder-notes"]
+        })}</script>
+      </article></main>`
+    }),
+    "https://newsletter.example/robots.txt": text("User-agent: *\nAllow: /\nSitemap: https://newsletter.example/sitemap.xml\n"),
+    "https://newsletter.example/sitemap.xml": text("<urlset><url><loc>https://newsletter.example/</loc></url></urlset>")
+  }) });
+
+  const md = renderMarkdownReport(result);
+  assert.equal(result.scope.summary, "Content, newsletter, or publication site");
+  assert.equal(result.categories.integration.applicable, false);
+  assert.equal(result.evidence.surfaces.find((surface) => surface.key === "pricingMd").applicable, false);
+  assert.equal(result.evidence.surfaces.find((surface) => surface.key === "openapi").applicable, false);
+  assert.equal(result.evidence.surfaces.find((surface) => surface.key === "mcpServerCard").applicable, false);
+  assert.equal(result.evidence.surfaces.find((surface) => surface.key === "agentMode").applicable, false);
+  assert.ok(!result.recommendations.some((rec) => /pricing|OpenAPI|MCP|agent view/i.test(`${rec.title} ${rec.action}`)));
+  assert.doesNotMatch(md, /pricing\.md|OpenAPI|MCP server-card|agent mode|\?mode=agent|Agent integration and programmable access/);
+});
+
+test("keeps API, MCP, and agent-mode checks for agent-facing products", async () => {
+  const result = await auditSite("https://agent-product.example", { fetcher: fixtureFetcher({
+    "https://agent-product.example/": html({
+      title: "Agent Product",
+      description: "Agent Product gives AI agents API and MCP tools.",
+      body: `<main><h1>Agent Product</h1><h2>API</h2><p>${"Agent Product is a software platform for AI agents. It has API docs, MCP setup, SDK install instructions, scoped auth, rate limits, pricing plans, and schema examples. ".repeat(30)}</p></main>`
+    }),
+    "https://agent-product.example/llms.txt": text("Agent Product overview API MCP auth pricing setup support ".repeat(5)),
+    "https://agent-product.example/robots.txt": text("User-agent: *\nAllow: /\n"),
+    "https://agent-product.example/sitemap.xml": text("<urlset><url><loc>https://agent-product.example/</loc></url></urlset>"),
+    "https://agent-product.example/openapi.json": json({ openapi: "3.1.0", paths: {} })
+  }) });
+
+  const md = renderMarkdownReport(result);
+  assert.equal(result.scope.summary, "Agent-facing product or programmable service");
+  assert.equal(result.categories.integration.applicable, true);
+  assert.equal(result.evidence.surfaces.find((surface) => surface.key === "openapi").applicable, true);
+  assert.equal(result.evidence.surfaces.find((surface) => surface.key === "mcpServerCard").applicable, true);
+  assert.ok(result.recommendations.some((rec) => rec.title === "Publish OpenAPI or explain no public API"));
+  assert.ok(result.recommendations.some((rec) => rec.title === "Add MCP/WebMCP discovery when agents should use tools"));
+  assert.match(md, /OpenAPI/);
+  assert.match(md, /MCP server-card/);
 });
 
 test("does not count malformed JSON-LD as valid structured data", async () => {
