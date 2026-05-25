@@ -3,11 +3,19 @@
 Codex skill and zero-dependency Node CLI for auditing websites against answer-engine optimization, AI search visibility, and agent-readiness requirements.
 
 ```bash
-npm install
-node ./bin/lazyweb-aeo-audit.mjs https://lazyweb.com --out reports
+curl -fsSL https://raw.githubusercontent.com/aboul3ata/Lazyweb-aeo-audit-skill/main/install.sh | sh
+lazyweb-aeo-audit
 ```
 
-The audit produces a score, Markdown report, JSON evidence file, and prioritized recommendations.
+The first run asks which website to audit, tries to infer it from the current repo, then confirms before writing an AEO audit report. The audit produces a score, Markdown report, JSON evidence file, and prioritized recommendations.
+
+The installer adds:
+
+- `lazyweb-aeo-audit` to `~/.local/bin`
+- `Lazyweb:AEO_audit` to `~/.codex/skills/lazyweb-aeo-audit`
+- `Lazyweb:AEO_audit` to `~/.claude/skills/lazyweb-aeo-audit`
+
+If `~/.local/bin` is not on your `PATH`, the installer prints the exact shell profile line to add.
 
 ## What It Checks
 
@@ -21,7 +29,8 @@ The audit produces a score, Markdown report, JSON evidence file, and prioritized
 
 ```bash
 npm test
-node ./bin/lazyweb-aeo-audit.mjs https://tryprofound.com --out reports
+lazyweb-aeo-audit
+lazyweb-aeo-audit https://lazyweb.com --out reports
 npm run test:live
 ```
 
@@ -29,4 +38,4 @@ npm run test:live
 
 ## Skill Use
 
-Copy this repo or install the root `SKILL.md` as a Codex skill. Invoke it as `Lazyweb:AEO_audit`. When the user asks for an AEO audit, run the CLI first, inspect the evidence, then summarize the highest-leverage recommendations.
+Invoke it as `Lazyweb:AEO_audit` in Claude or Codex. When the user asks for an AEO audit, run `lazyweb-aeo-audit` first, inspect the evidence, then summarize the highest-leverage recommendations.

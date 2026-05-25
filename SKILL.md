@@ -9,11 +9,16 @@ Use this skill to score a website, write a Markdown report, and prioritize recom
 
 ## Quick Start
 
-From this skill repo:
+Installed users should start with the guided command:
 
 ```bash
-npm install
-node ./bin/lazyweb-aeo-audit.mjs https://example.com --out reports
+lazyweb-aeo-audit
+```
+
+The first run asks which website to audit, tries to infer it from the current repo, then confirms before writing a report. Direct usage is also supported:
+
+```bash
+lazyweb-aeo-audit https://example.com --out reports
 ```
 
 The command writes:

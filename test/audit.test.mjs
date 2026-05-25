@@ -2,7 +2,12 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { pathToFileURL } from "node:url";
 import { auditSite, renderMarkdownReport } from "../lib/audit.mjs";
-import { isDirectRun, parseCliArgs } from "../bin/lazyweb-aeo-audit.mjs";
+import {
+  inferWebsiteFromProject,
+  isDirectRun,
+  normalizeWebsiteInput,
+  parseCliArgs
+} from "../bin/lazyweb-aeo-audit.mjs";
 
 test("scores a strong agent-ready site higher than a thin app shell", async () => {
   const strong = await auditSite("https://example.com", { fetcher: fixtureFetcher({
@@ -159,14 +164,24 @@ test("parses CLI options without treating option values as URLs", () => {
   assert.deepEqual(parseCliArgs(["--out", "reports", "https://example.com", "--json"]), {
     url: "https://example.com",
     outDir: "reports",
-    jsonOnly: true
+    jsonOnly: true,
+    yes: false,
+    help: false
   });
   assert.deepEqual(parseCliArgs(["https://example.com", "--out=reports"]), {
     url: "https://example.com",
     outDir: "reports",
-    jsonOnly: false
+    jsonOnly: false,
+    yes: false,
+    help: false
   });
-  assert.throws(() => parseCliArgs(["--out", "reports"]), /Missing URL/);
+  assert.deepEqual(parseCliArgs(["--out", "reports", "--yes"]), {
+    url: null,
+    outDir: "reports",
+    jsonOnly: false,
+    yes: true,
+    help: false
+  });
 });
 
 test("CLI direct-run guard handles npm bin symlinks", () => {
@@ -175,6 +190,41 @@ test("CLI direct-run guard handles npm bin symlinks", () => {
   const realpath = (value) => value === symlinkPath ? realPath : value;
 
   assert.equal(isDirectRun(symlinkPath, pathToFileURL(realPath).href, realpath), true);
+});
+
+test("normalizes website input for interactive first run", () => {
+  assert.equal(normalizeWebsiteInput("example.com"), "https://example.com/");
+  assert.equal(normalizeWebsiteInput("http://example.com/pricing"), "http://example.com/pricing");
+  assert.throws(() => normalizeWebsiteInput(""), /Missing website/);
+});
+
+test("infers website from project metadata", async () => {
+  const files = new Map([
+    ["/repo/package.json", JSON.stringify({
+      homepage: "https://product.example",
+      repository: { url: "https://github.com/acme/product" }
+    })],
+    ["/repo/README.md", "# Product\nhttps://docs.example"]
+  ]);
+
+  const result = await inferWebsiteFromProject("/repo", fakeReadText(files));
+  assert.deepEqual(result, {
+    url: "https://product.example/",
+    source: "package.json homepage"
+  });
+});
+
+test("infers README website while skipping repository and badge URLs", async () => {
+  const files = new Map([
+    ["/repo/package.json", "{}"],
+    ["/repo/README.md", "# Product\nhttps://github.com/acme/product\nhttps://img.shields.io/badge/a-b\nhttps://app.example"]
+  ]);
+
+  const result = await inferWebsiteFromProject("/repo", fakeReadText(files));
+  assert.deepEqual(result, {
+    url: "https://app.example/",
+    source: "README.md"
+  });
 });
 
 test("does not award content points when homepage is blocked", async () => {
@@ -329,6 +379,17 @@ function fixtureFetcher(map) {
       headers: new Map(Object.entries(value.headers || {})),
       text: async () => value.body
     };
+  };
+}
+
+function fakeReadText(files) {
+  return async (path) => {
+    if (!files.has(path)) {
+      const error = new Error(`ENOENT: ${path}`);
+      error.code = "ENOENT";
+      throw error;
+    }
+    return files.get(path);
   };
 }
 
