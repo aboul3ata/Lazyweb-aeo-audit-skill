@@ -3,7 +3,7 @@ import { auditSite, writeReportFiles } from "../lib/audit.mjs";
 
 const urls = [
   "https://lazyweb.com",
-  "https://www.tryprofound.com",
+  "https://www.figma.com",
   "https://www.openai.com",
   "https://www.anthropic.com",
   "https://linear.app",
@@ -29,4 +29,3 @@ if (failures.length) {
   console.error("Invalid score rows:", failures);
   process.exit(1);
 }
-

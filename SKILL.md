@@ -76,7 +76,7 @@ Treat these as table-stakes for an AEO-ready commercial website:
 
 Use the references in `references/` as the durable source base:
 
-- `references/profound-research-corpus.md` covers every item found on Profound's `/research` hub at build time.
+- `references/answer-engine-research-corpus.md` covers public AI-search research themes captured at build time.
 - `references/aeo-tools-and-research.md` summarizes current AEO/GEO assessment tools and research themes.
 - `references/prior-lazylanding-orank-checklist.md` preserves the Lazylanding agent-readiness checklist that seeded the original work.
 - `references/scoring-rubric.md` defines the exact category weights and evidence standards.

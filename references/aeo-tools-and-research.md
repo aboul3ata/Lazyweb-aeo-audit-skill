@@ -4,7 +4,7 @@ This reference summarizes recurring requirements from current AEO/GEO tooling an
 
 ## Tool Categories to Account For
 
-- AI visibility platforms: Profound, AthenaHQ, Peec AI, Goodie, Otterly AI, Scrunch AI, Semrush AI visibility features, Writesonic/Rankscale-style AI search monitors.
+- AI visibility platforms: brand/citation monitoring platforms, prompt-level share-of-voice tools, AI search monitors, and classic SEO suites adding AI visibility features.
 - Technical AI-readiness checkers: llms.txt validators, robots/AI crawler policy checkers, structured data validators, OpenAPI/MCP manifest checks, schema validators.
 - Prompt and citation monitors: tools that track brand mention share, prompt-level citations, source overlap, and platform variance across ChatGPT, Gemini, Perplexity, Claude, and Google AI surfaces.
 - Content and answerability tools: classic SEO crawlers plus content quality checks for direct answers, FAQs, comparisons, alternatives, pricing, use cases, and quotable evidence.
@@ -39,4 +39,4 @@ This reference summarizes recurring requirements from current AEO/GEO tooling an
 - Official OpenAPI specification: https://spec.openapis.org/oas/
 - Cloudflare Content Signals policy docs: https://developers.cloudflare.com/bots/additional-configurations/managed-robots-txt/
 - AEO/GEO measurement research examples: citation selection/absorption frameworks, content-structure citation studies, and generative search impact studies on arXiv.
-- Market scans to revisit periodically: Profound, Peec AI, Otterly AI, AthenaHQ, Scrunch AI, Goodie, Semrush AI features, Ahrefs Brand Radar, Conductor, and emerging audit-first tools.
+- Market scans to revisit periodically: AI visibility platforms, classic SEO suites adding AI citation tracking, brand-radar products, and emerging audit-first tools.

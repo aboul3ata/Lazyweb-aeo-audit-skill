@@ -63,7 +63,9 @@ test("Markdown report includes score and prioritized recommendations", async () 
   const md = renderMarkdownReport(result);
   assert.match(md, /Overall score:/);
   assert.match(md, /Highest-Leverage Recommendations/);
+  assert.match(md, /AEO Research Lens Applied/);
   assert.match(md, /Publish a substantive \/llms\.txt/);
+  assert.doesNotMatch(md, new RegExp(["Pro", "found"].join(""), "i"));
 });
 
 test("does not count a generic large marketing page as ?mode=agent", async () => {

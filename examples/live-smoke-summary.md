@@ -8,12 +8,12 @@ Command:
 npm run test:live
 ```
 
-The live smoke audits ten landing pages, including `lazyweb.com`, `tryprofound.com`, and eight representative product/company sites. Full generated reports are written to `reports/live-smoke/` and intentionally ignored by git.
+The live smoke audits `lazyweb.com` plus nine representative product/company sites. Full generated reports are written to `reports/live-smoke/` and intentionally ignored by git.
 
 | URL | Score | Grade | Top recommendation |
 |---|---:|---|---|
 | https://lazyweb.com | 47 | F | Make raw HTML answer what the product does |
-| https://www.tryprofound.com | 59 | F | Add `/pricing.md` for agent plan comparison |
+| https://www.figma.com | 69 | D | Publish a substantive `/llms.txt` |
 | https://www.openai.com | 3 | F | Make the homepage fetchable by standard agents |
 | https://www.anthropic.com | 60 | D | Publish a substantive `/llms.txt` |
 | https://linear.app | 70 | C | Add `/pricing.md` for agent plan comparison |
